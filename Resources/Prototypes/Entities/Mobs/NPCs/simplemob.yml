@@ -1,5 +1,5 @@
 - type: entity
-  save: true
+  save: false
   parent:
   - BaseMob
   - MobDamageable
@@ -19,10 +19,8 @@
   - type: StatusEffects
     allowed:
     - Electrocution
-    - TemporaryBlindness
     - Pacified
     - Flashed
-    - RadiationProtection
     - Adrenaline
   - type: Buckle
   - type: StandingState
@@ -63,7 +61,6 @@
   - type: MobPrice
     price: 1000 # Living critters are valuable in space.
   - type: Perishable
-  - type: MovementIgnoreGravity
 
 - type: entity
   parent:
@@ -93,10 +90,8 @@
   - type: StatusEffects
     allowed:
     - Electrocution
-    - TemporaryBlindness
     - Pacified
     - Flashed
-    - RadiationProtection
     - Adrenaline
   - type: Bloodstream
     bloodReferenceSolution:

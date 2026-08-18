@@ -1,7 +1,6 @@
-# The literal bare minimum needed to be a controllable mob. Cannot move but can interact.
 - type: entity
   abstract: true
-  save: true
+  save: false
   id: BaseControllable
   components:
   - type: Sprite
@@ -38,13 +37,12 @@
   - type: MindContainer
   - type: RequireProjectileTarget
     active: False
-  - type: RMCSetPose
 
 # The progenitor. This should only container the most basic components possible.
 # Only put things on here if every mob *must* have it. This includes ghosts.
 - type: entity
   abstract: true
-  save: true
+  save: false
   parent: BaseControllable
   id: BaseMob
   components:
@@ -57,7 +55,7 @@
   - type: LagCompensation
 
 - type: entity
-  save: true
+  save: false
   id: MobPolymorphable
   abstract: true
   components:
@@ -65,7 +63,7 @@
 
 # Used for mobs that have health and can take damage.
 - type: entity
-  save: true
+  save: false
   id: MobDamageable
   abstract: true
   components:
@@ -79,6 +77,21 @@
         damage: 400
       behaviors:
       - !type:GibBehavior { }
+    - trigger:
+        !type:DamageTypeTrigger
+        damageType: Heat
+        damage: 1500
+      behaviors:
+      - !type:SpawnEntitiesBehavior
+        spawnInContainer: true
+        spawn:
+          Ash:
+            min: 1
+            max: 1
+      - !type:BurnBodyBehavior
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MeatLaserImpact
     - trigger:
         !type:DamageTypeTrigger
         damageType: Radiation
@@ -109,10 +122,9 @@
       - ActionCritSuccumb
       - ActionCritFakeDeath
       - ActionCritLastWords
-      Dead:
-      - ActionAcceptDeath
+  - type: StoreDamageTakenOnMind
   - type: Deathgasp
-    # funky start, cpr
+  # funky start, cpr
   - type: Cpr
     bonusHeal:
       types:
@@ -146,7 +158,7 @@
 
 # Used for mobs that can enter combat mode and can attack.
 - type: entity
-  save: true
+  save: false
   id: MobCombat
   abstract: true
   components:
@@ -161,7 +173,7 @@
 
 # Used for mobs that are affected by atmospherics, pressure, and heat
 - type: entity
-  save: true
+  save: false
   id: MobAtmosExposed
   abstract: true
   components:
@@ -221,7 +233,7 @@
 
 # Used for mobs that can be set on fire
 - type: entity
-  save: true
+  save: false
   id: MobFlammable
   abstract: true
   components:
@@ -237,7 +249,7 @@
 
 # Used for mobs that need to breathe
 - type: entity
-  save: true
+  save: false
   id: MobRespirator
   abstract: true
   components:
@@ -252,11 +264,11 @@
 
 # Used for mobs that have a bloodstream
 - type: entity
-  save: true
+  save: false
   id: MobBloodstream
   abstract: true
   components:
-  - type: SolutionContainerManager
+  - type: SolutionManager
   - type: InjectableSolution
     solution: bloodstream
   - type: Bloodstream
@@ -266,3 +278,14 @@
     bloodlossHealDamage:
       types:
         Bloodloss: -1
+
+# Used for mobs that should slightly see in the dark
+- type: entity
+  save: false
+  id: MobNightVision
+  abstract: true
+  components:
+  - type: NightVision
+    prioritized: false
+    relayOverlay: false # In case default value ever changes
+    lightingColor: '#FFFFFF15' # Basically makes it impossible for things to be "Pitch black" but can still be dark.
