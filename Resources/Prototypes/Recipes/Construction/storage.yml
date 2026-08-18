@@ -100,6 +100,19 @@
   conditions:
     - !type:WallmountCondition
 
+- type: construction
+  id: MedicineCabinet
+  graph: MedicineCabinetCabinet
+  startNode: start
+  targetNode: medicineCabinet
+  category: construction-category-storage
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+
+
 # Shelfs
 # Normals
 - type: construction
@@ -197,6 +210,17 @@
   graph: Shelf
   startNode: start
   targetNode: ShelfChemistry
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: true
+  conditions:
+    - !type:WallmountCondition
+
+- type: construction
+  id: ShelfMedicine
+  graph: Shelf
+  startNode: start
+  targetNode: ShelfMedicine
   objectType: Structure
   placementMode: SnapgridCenter
   canBuildInImpassable: true

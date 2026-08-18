@@ -17,6 +17,8 @@ using Content.Shared.Speech;
 using Content.Shared.Standing;
 using Content.Shared.Strip.Components;
 using Content.Shared.Throwing;
+using Content.Shared.Tools.Systems;
+using Content.Shared.Movement.Pulling.Components; // funky
 
 namespace Content.Shared.Mobs.Systems;
 
@@ -45,16 +47,10 @@ public partial class MobStateSystem
         SubscribeLocalEvent<MobStateComponent, CombatModeShouldHandInteractEvent>(OnCombatModeShouldHandInteract);
         SubscribeLocalEvent<MobStateComponent, AttemptPacifiedAttackEvent>(OnAttemptPacifiedAttack);
         SubscribeLocalEvent<MobStateComponent, DamageModifyEvent>(OnDamageModify);
-        SubscribeLocalEvent<MobStateComponent, ComponentStartup>(OnCompInit);
+
 
         SubscribeLocalEvent<MobStateComponent, UnbuckleAttemptEvent>(OnUnbuckleAttempt);
     }
-
-    private void OnCompInit(EntityUid uid, MobStateComponent component, ComponentStartup args)
-    {
-        if (component.CurrentState != MobState.Alive) OnStateEnteredSubscribers(uid, component, component.CurrentState);
-    }
-
 
     private void OnUnbuckleAttempt(Entity<MobStateComponent> ent, ref UnbuckleAttemptEvent args)
     {
@@ -77,6 +73,8 @@ public partial class MobStateSystem
         {
             case MobState.Dead:
             case MobState.Critical:
+            case MobState.SoftCritical: // funky
+            case MobState.HardCritical: // funky
                 args.Cancelled = true;
                 break;
         }
@@ -90,11 +88,13 @@ public partial class MobStateSystem
                 //unused
                 break;
             case MobState.Critical:
+            case MobState.SoftCritical: // funky
                 _standing.Stand(target);
+                break; // funky
+            case MobState.HardCritical: // funky
                 break;
             case MobState.Dead:
                 RemComp<CollisionWakeComponent>(target);
-                _standing.Stand(target);
                 break;
             case MobState.Invalid:
                 //unused
@@ -115,33 +115,35 @@ public partial class MobStateSystem
         switch (state)
         {
             case MobState.Alive:
-                {
-                    _standing.Stand(target);
-                    _appearance.SetData(target, MobStateVisuals.State, MobState.Alive);
-                    break;
-                }
+            {
+                _standing.Stand(target);
+                _appearance.SetData(target, MobStateVisuals.State, MobState.Alive);
+                break;
+            }
             case MobState.Critical:
-                {
-                    Down(target);
-                    _appearance.SetData(target, MobStateVisuals.State, MobState.Critical);
-                    break;
-                }
+            case MobState.SoftCritical: // funky
+            case MobState.HardCritical: // funky
+            {
+                Down(target);
+                _appearance.SetData(target, MobStateVisuals.State, MobState.Critical);
+                break;
+            }
             case MobState.Dead:
-                {
-                    EnsureComp<CollisionWakeComponent>(target);
-                    Down(target);
-                    _appearance.SetData(target, MobStateVisuals.State, MobState.Dead);
-                    break;
-                }
+            {
+                EnsureComp<CollisionWakeComponent>(target);
+                Down(target);
+                _appearance.SetData(target, MobStateVisuals.State, MobState.Dead);
+                break;
+            }
             case MobState.Invalid:
-                {
-                    //unused;
-                    break;
-                }
+            {
+                //unused;
+                break;
+            }
             default:
-                {
-                    throw new NotImplementedException();
-                }
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 
@@ -179,9 +181,16 @@ public partial class MobStateSystem
         {
             case MobState.Dead:
             case MobState.Critical:
+            case MobState.HardCritical: // funky
                 args.Cancel();
                 break;
         }
+
+        // funky, can't crawl away if someone's got hold of you
+        if (args is UpdateCanMoveEvent && component.CurrentState == MobState.SoftCritical &&
+            TryComp<PullableComponent>(target, out var pullable) && pullable.BeingPulled)
+            args.Cancel();
+        // funky end
     }
 
     private void OnEquipAttempt(EntityUid target, MobStateComponent component, IsEquippingAttemptEvent args)

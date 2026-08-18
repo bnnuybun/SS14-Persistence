@@ -1,4 +1,5 @@
 using Content.Shared.Database;
+using Content.Shared.Humanoid;
 using Content.Shared.Mobs.Components;
 using Robust.Shared.Player;
 
@@ -32,7 +33,7 @@ public partial class MobStateSystem
         if (!_mobStateQuery.Resolve(entity, ref component))
             return;
 
-        var ev = new UpdateMobStateEvent { Target = entity, Component = component, Origin = origin };
+        var ev = new UpdateMobStateEvent {Target = entity, Component = component, Origin = origin};
         RaiseLocalEvent(entity, ref ev);
         ChangeState(entity, component, ev.State, origin: origin);
     }
@@ -101,11 +102,22 @@ public partial class MobStateSystem
     {
         var oldState = component.CurrentState;
         //make sure we are allowed to enter the new state
-        if (oldState == newState || !component.AllowedStates.Contains(newState))
+        if (oldState == newState) // funky
             return;
 
+        // funky start
+        var targetState = newState;
+        if (!component.AllowedStates.Contains(targetState))
+        {
+            if (!ResolveStateFallback(oldState, targetState, component, out targetState))
+                return;
+
+            newState = targetState;
+        }
+        // funky end
+
         OnExitState(target, component, oldState);
-        component.CurrentState = newState;
+        component.CurrentState = newState; // funky
         OnEnterState(target, component, newState);
 
         var ev = new MobStateChangedEvent(target, component, oldState, newState, origin);

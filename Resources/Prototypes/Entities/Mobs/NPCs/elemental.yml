@@ -316,6 +316,7 @@
   description: It consists of a liquid, and it wants to dissolve you in itself.
   components:
   - type: GhostRole
+  - type: Unrevivable # funky
     prob: 0
     description: ghost-role-information-angry-slimes-description
     rules: ghost-role-information-angry-slimes-rules

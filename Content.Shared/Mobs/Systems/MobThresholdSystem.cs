@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Content.Shared.Alert;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
@@ -6,16 +8,14 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Events;
 using Robust.Shared.GameStates;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Content.Shared.Mobs.Systems;
 
-public sealed class MobThresholdSystem : EntitySystem
+public sealed partial class MobThresholdSystem : EntitySystem
 {
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly AlertsSystem _alerts = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
 
     public override void Initialize()
     {
@@ -131,6 +131,17 @@ public sealed class MobThresholdSystem : EntitySystem
         foreach (var pair in thresholdComponent.Thresholds)
         {
             if (pair.Value == mobState)
+            {
+                threshold = pair.Key;
+                return true;
+            }
+        }
+
+        // funky, for anything asking for a crit threshold, the softcrit entry is probably the right one
+        if (mobState != MobState.Critical)
+            return false;
+        {
+            foreach (var pair in thresholdComponent.Thresholds.Where(pair => pair.Value == MobState.SoftCritical))
             {
                 threshold = pair.Key;
                 return true;
@@ -410,7 +421,7 @@ public sealed class MobThresholdSystem : EntitySystem
             {
                 percentage = FixedPoint2.Clamp(percentage.Value, 0, 1);
 
-                severity = (short)MathF.Round(
+                severity = (short) MathF.Round(
                     MathHelper.Lerp(
                         _alerts.GetMinSeverity(currentAlert),
                         _alerts.GetMaxSeverity(currentAlert),
